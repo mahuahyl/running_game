@@ -8,7 +8,6 @@ std::string getAssetPath(const std::string &relativePath)
 {
     char exePath[MAX_PATH];
     GetModuleFileNameA(NULL, exePath, MAX_PATH);
-    // exe 在 bin/ 下，项目根是上一级
     std::filesystem::path projectRoot =
         std::filesystem::path(exePath).parent_path().parent_path();
     return (projectRoot / relativePath).string();
@@ -17,18 +16,25 @@ std::string getAssetPath(const std::string &relativePath)
 int main()
 {
     sf::RenderWindow window(sf::VideoMode({800, 600}), "Running");
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(240);
     sf::Clock clock;
 
     // 1. 载入纹理
-    sf::Texture texture;
-    if (!texture.loadFromFile(getAssetPath("assets/Main Characters/Mask Dude/Run (32x32).png")))
+    sf::Texture p_run_texture;
+    if (!p_run_texture.loadFromFile(getAssetPath("assets/Main Characters/Mask Dude/Run (32x32).png")))
     {
         // 如果载入失败，程序无法继续
         return -1;
     }
 
-    Player p1(texture);
+    sf::Texture p_idle_texture;
+    if (!p_idle_texture.loadFromFile(getAssetPath("assets/Main Characters/Mask Dude/Idle (32x32).png")))
+    {
+        // 如果载入失败，程序无法继续
+        return -1;
+    }
+
+    Player p1(p_idle_texture, p_run_texture);
 
     while (window.isOpen())
     {

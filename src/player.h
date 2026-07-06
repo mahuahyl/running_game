@@ -6,23 +6,33 @@
 
 class Player
 {
-private:
-    sf::Sprite spr;
-    float speed = 200.f;
-    int frame = 0;
-    sf::Clock animClock;
 
 public:
-    Player(const sf::Texture &tex) : spr(tex)
+    enum class State
     {
-        spr.setTextureRect(sf::IntRect({0, 0}, {32, 32}));
-        auto b = spr.getLocalBounds();
-        spr.setOrigin({b.size.x / 2.f, b.size.y / 2.f});
+        Idle,
+        Run
+    };
+
+private:
+    const sf::Texture &m_idleTex;
+    const sf::Texture &m_runTex;
+    sf::Sprite m_spr;
+    float m_speed = 200.f;
+    int m_frame = 0;
+    float m_frameTimer = 0.f;
+    State m_state = State::Idle;
+
+public:
+    Player(const sf::Texture &IdleTex, const sf::Texture &RunTex) : m_idleTex(IdleTex), m_runTex(RunTex), m_spr(IdleTex)
+    {
+        m_spr.setTextureRect(sf::IntRect({0, 0}, {32, 32}));
+        auto b = m_spr.getLocalBounds();
+        m_spr.setOrigin({b.size.x / 2.f, b.size.y / 2.f});
     }
 
     void move(float dt)
     {
-        double angle = 0;
         float x = 0, y = 0;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))
         {
@@ -40,21 +50,32 @@ public:
         {
             y += 1.f;
         }
-        if (animClock.getElapsedTime().asSeconds() > 0.1f)
-        {
-            frame = (frame + 1) % 12;
-            spr.setTextureRect(sf::IntRect({frame * 32, 0}, {32, 32}));
-            animClock.restart();
-        }
+
         float len = std::sqrt(x * x + y * y);
         if (len > 0.f)
         {
+            m_state = State::Run;
+            m_spr.setTexture(m_runTex);
             x /= len;
             y /= len;
+            m_spr.move({m_speed * x * dt, m_speed * y * dt});
+        }
+        else
+        {
+            m_state = State::Idle;
+            m_spr.setTexture(m_idleTex);
         }
 
-        spr.move({speed * x * dt, speed * y * dt});
+        m_frameTimer += dt;
+        if (m_frameTimer > 0.1f)
+        {
+            m_frameTimer -= 0.1f;
+            int maxFrames = (m_state == State::Idle) ? 11 : 12;
+            m_frame = (m_frame + 1) % maxFrames;
+            m_spr.setTextureRect(sf::IntRect({m_frame * 32, 0}, {32, 32}));
+        }
     }
 
-    void draw(sf::RenderWindow &w) const { w.draw(spr); }
+    void draw(sf::RenderWindow &w) const { w.draw(m_spr); }
+
 };
