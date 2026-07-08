@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <filesystem>
 #include <windows.h>
+#include "character.h"
 #include "player.h"
 
 // 获取资源绝对路径 — 不管从哪里运行 exe 都能找到 assets/
@@ -20,19 +21,11 @@ int main()
     sf::Clock clock;
 
     // 1. 载入纹理
-    sf::Texture p_run_texture;
-    if (!p_run_texture.loadFromFile(getAssetPath("assets/Main Characters/Mask Dude/Run (32x32).png")))
-    {
-        // 如果载入失败，程序无法继续
-        return -1;
-    }
-
-    sf::Texture p_idle_texture;
-    if (!p_idle_texture.loadFromFile(getAssetPath("assets/Main Characters/Mask Dude/Idle (32x32).png")))
-    {
-        // 如果载入失败，程序无法继续
-        return -1;
-    }
+    sf::Texture p_run_texture, p_idle_texture, npc_run_texture, npc_idle_texture;
+    p_run_texture.loadFromFile(getAssetPath("assets/Main Characters/Mask Dude/Run (32x32).png"));
+    p_idle_texture.loadFromFile(getAssetPath("assets/Main Characters/Mask Dude/Idle (32x32).png"));
+    npc_run_texture.loadFromFile(getAssetPath("assets/Main Characters/Virtual Guy/Run (32x32).png"));
+    npc_idle_texture.loadFromFile(getAssetPath("assets/Main Characters/Virtual Guy/Idle (32x32).png"));
 
     Player p1(p_idle_texture, p_run_texture);
 
@@ -50,7 +43,7 @@ int main()
             }
         }
 
-        p1.move(dt);
+        p1.update(dt);
         window.clear();
         p1.draw(window);
         window.display();
