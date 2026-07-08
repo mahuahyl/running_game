@@ -4,7 +4,8 @@
 
 class Player : public Character{
 public:
-    using Character::Character;
+    Player(const sf::Texture &IdleTex, const sf::Texture &RunTex)
+    : Character(IdleTex, RunTex, 200.f){}
 private:
     sf::Vector2f  Get_direction() override{
         float x = 0.f, y = 0.f;
