@@ -1,5 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <windows.h>
 #include "character.h"
 #include "player.h"
 #include "npc.h"
@@ -12,11 +13,24 @@ int main()
 
     // 1. 载入纹理
     sf::Texture p_run_texture, p_idle_texture, npc_run_texture, npc_idle_texture;
-    if (!p_run_texture.loadFromFile("assets/Main Characters/Mask Dude/Run (32x32).png") ||
-        !p_idle_texture.loadFromFile("assets/Main Characters/Mask Dude/Idle (32x32).png") ||
-        !npc_run_texture.loadFromFile("assets/Main Characters/Virtual Guy/Run (32x32).png") ||
-        !npc_idle_texture.loadFromFile("assets/Main Characters/Virtual Guy/Idle (32x32).png"))
+    if (!p_run_texture.loadFromFile("assets/Main Characters/Mask Dude/Run (32x32).png"))
     {
+        MessageBoxA(NULL, "Failed to load: Run texture", "Error", MB_OK | MB_ICONERROR);
+        return -1;
+    }
+    if (!p_idle_texture.loadFromFile("assets/Main Characters/Mask Dude/Idle (32x32).png"))
+    {
+        MessageBoxA(NULL, "Failed to load: Idle texture", "Error", MB_OK | MB_ICONERROR);
+        return -1;
+    }
+    if (!npc_run_texture.loadFromFile("assets/Main Characters/Virtual Guy/Run (32x32).png"))
+    {
+        MessageBoxA(NULL, "Failed to load: NPC Run texture", "Error", MB_OK | MB_ICONERROR);
+        return -1;
+    }
+    if (!npc_idle_texture.loadFromFile("assets/Main Characters/Virtual Guy/Idle (32x32).png"))
+    {
+        MessageBoxA(NULL, "Failed to load: NPC Idle texture", "Error", MB_OK | MB_ICONERROR);
         return -1;
     }
 
