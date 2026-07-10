@@ -1,19 +1,8 @@
 #include <SFML/Graphics.hpp>
-#include <filesystem>
-#include <windows.h>
+#include <iostream>
 #include "character.h"
 #include "player.h"
 #include "npc.h"
-
-// 获取资源绝对路径 — 不管从哪里运行 exe 都能找到 assets/
-std::string getAssetPath(const std::string &relativePath)
-{
-    char exePath[MAX_PATH];
-    GetModuleFileNameA(NULL, exePath, MAX_PATH);
-    std::filesystem::path projectRoot =
-        std::filesystem::path(exePath).parent_path().parent_path();
-    return (projectRoot / relativePath).string();
-}
 
 int main()
 {
@@ -23,10 +12,10 @@ int main()
 
     // 1. 载入纹理
     sf::Texture p_run_texture, p_idle_texture, npc_run_texture, npc_idle_texture;
-    if (!p_run_texture.loadFromFile(getAssetPath("assets/Main Characters/Mask Dude/Run (32x32).png")) ||
-        !p_idle_texture.loadFromFile(getAssetPath("assets/Main Characters/Mask Dude/Idle (32x32).png")) ||
-        !npc_run_texture.loadFromFile(getAssetPath("assets/Main Characters/Virtual Guy/Run (32x32).png")) ||
-        !npc_idle_texture.loadFromFile(getAssetPath("assets/Main Characters/Virtual Guy/Idle (32x32).png")))
+    if (!p_run_texture.loadFromFile("assets/Main Characters/Mask Dude/Run (32x32).png") ||
+        !p_idle_texture.loadFromFile("assets/Main Characters/Mask Dude/Idle (32x32).png") ||
+        !npc_run_texture.loadFromFile("assets/Main Characters/Virtual Guy/Run (32x32).png") ||
+        !npc_idle_texture.loadFromFile("assets/Main Characters/Virtual Guy/Idle (32x32).png"))
     {
         return -1;
     }

@@ -2,8 +2,8 @@
 build/
 
 # Binary output
-bin/*.exe
-bin/*.dll
+*.exe
+*.dll
 
 # IDE
 .vscode/
