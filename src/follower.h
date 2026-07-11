@@ -3,14 +3,14 @@
 #include "character.h"
 #include "player.h"
 
-class Npc : public Character{
+class Follower : public Character{
 private:
     const Player* m_target;
     
 
 
 public:
-    Npc(const sf::Texture &IdleTex, const sf::Texture &RunTex, const Player* target)
+    Follower(const sf::Texture &IdleTex, const sf::Texture &RunTex, const Player* target)
     : Character(IdleTex, RunTex, 100.f), m_target(target){}
 
 private:

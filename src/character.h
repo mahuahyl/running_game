@@ -22,6 +22,7 @@ private:
 
     int m_frame = 0;
     float m_frameTimer = 0.f;
+    sf::Vector2f m_face_direc = {1.f, 0.f};
     State m_state = State::Idle;
     int max_frames = 11;
 
@@ -30,6 +31,7 @@ public:
         : m_idleTex(IdleTex), m_runTex(RunTex), m_spr(IdleTex), m_speed(speed)
     {
         m_spr.setTextureRect(sf::IntRect({0, 0}, {32, 32}));
+        m_spr.setPosition({400, 300});
         auto b = m_spr.getLocalBounds();
         m_spr.setOrigin({b.size.x / 2.f, b.size.y / 2.f});
     }
@@ -48,6 +50,8 @@ public:
             direction.x = direction.x / len;
             direction.y = direction.y / len;
 
+            m_face_direc = direction;
+
             m_spr.move({m_speed * direction.x * dt, m_speed * direction.y * dt});
         }
         else
@@ -55,6 +59,7 @@ public:
             m_state = State::Idle;
             m_spr.setTexture(m_idleTex);
             max_frames = 11;
+            m_face_direc = {1.f, 0.f};
         }
 
         m_frameTimer += dt;
@@ -65,6 +70,8 @@ public:
             m_spr.setTextureRect(sf::IntRect({m_frame * 32, 0}, {32, 32}));
         }
     }
+
+    sf::Vector2f getFacingDir() const { return m_face_direc; }
 
     void draw(sf::RenderWindow &w) const { w.draw(m_spr); }
 
