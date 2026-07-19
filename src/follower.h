@@ -11,7 +11,7 @@ private:
 
 public:
     Follower(const sf::Texture &IdleTex, const sf::Texture &RunTex, const Player* target)
-    : Character(IdleTex, RunTex, 100.f), m_target(target){}
+    : Character(IdleTex, RunTex, 100.f, {300.f, 400.f}, Team::player), m_target(target){}
 
 private:
     sf::Vector2f  Get_direction() override{

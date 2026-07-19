@@ -7,6 +7,7 @@
 #include "player.h"
 #include "follower.h"
 #include "bullet.h"
+#include "enemy.h"
 
 int main()
 {
@@ -15,7 +16,7 @@ int main()
     sf::Clock clock;
 
     // 1. 载入纹理
-    sf::Texture p_run_texture, p_idle_texture, npc_run_texture, npc_idle_texture, bullet_texture;
+    sf::Texture p_run_texture, p_idle_texture, npc_run_texture, npc_idle_texture,enemy_idle_texture, enemy_run_texture, bullet_texture;
     if (!p_run_texture.loadFromFile("assets/Main Characters/Mask Dude/Run (32x32).png"))
     {
         MessageBoxA(NULL, "Failed to load: Run texture", "Error", MB_OK | MB_ICONERROR);
@@ -41,10 +42,21 @@ int main()
         MessageBoxA(NULL, "Failed to load: Bullet texture", "Error", MB_OK | MB_ICONERROR);
         return -1;
     }
+    if (!enemy_run_texture.loadFromFile("assets/Main Characters/Pink Man/Run (32x32).png"))
+    {
+        MessageBoxA(NULL, "Failed to load: Enemy Run texture", "Error", MB_OK | MB_ICONERROR);
+        return -1;
+    }
+    if (!enemy_idle_texture.loadFromFile("assets/Main Characters/Pink Man/Idle (32x32).png"))
+    {
+        MessageBoxA(NULL, "Failed to load: Enemy Idle texture", "Error", MB_OK | MB_ICONERROR);
+        return -1;
+    }
 
     Player p1(p_idle_texture, p_run_texture);
-    Follower p2(npc_idle_texture, npc_run_texture, &p1);
+    Follower n1(npc_idle_texture, npc_run_texture, &p1);
     std::vector<Bullet> bullets;
+    std::vector<Enemy> enemies;
 
     while (window.isOpen())
     {
@@ -63,24 +75,57 @@ int main()
                     bullets.emplace_back(bullet_texture, p1.getFacingDir(), p1.getPosition());
                 }
             }
+
+            if (const auto *key = event->getIf<sf::Event::KeyPressed>())
+            {
+                if(key->code == sf::Keyboard::Key::P){
+                    Enemy e1(enemy_idle_texture, enemy_run_texture, &p1);
+                    enemies.push_back(e1);
+                }
+            }
         }
 
         for (auto& it : bullets)
         {
             it.update(dt);
         }
+        for (auto& it : enemies)
+        {
+            it.update(dt);
+        }
+
+        for(auto& b_it : bullets){
+            sf::Vector2f b_position = b_it.getPosition();
+            for(auto& e_it : enemies){
+                sf::Vector2f e_position = e_it.getPosition();
+                if((pow((b_position.x - e_position.x), 2) + pow((b_position.y - e_position.y), 2)) <= 100){
+                    e_it.Heated();
+                    b_it.kill();
+                }
+            }
+        }
+
         bullets.erase(std::remove_if(bullets.begin(), bullets.end(),
-            [](Bullet& b) { return b.check_distance(); }), bullets.end());
+            [](Bullet& b) { return (b.check_distance() || !b.check_is_alive()); }), bullets.end());
+
+        enemies.erase(std::remove_if(enemies.begin(), enemies.end(),
+            [](Enemy& b) { return b.check_if_dead(); }), enemies.end());
+
         p1.update(dt);
-        p2.update(dt);
+        //n1.update(dt);
         window.clear();
 
         for (auto& it : bullets)
         {
             it.draw(window);
         }
+        for (auto& it : enemies)
+        {
+            it.draw(window);
+        }
+
         p1.draw(window);
-        p2.draw(window);
+        //n1.draw(window);
         window.display();
     }
 }

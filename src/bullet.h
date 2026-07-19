@@ -12,6 +12,7 @@ private:
     sf::Vector2f b_direction, b_position;
     const sf::Texture *b_Tex;
     sf::Sprite b_spr;
+    bool b_alive = true;
 
 public:
     Bullet(const sf::Texture &Tex, sf::Vector2f direction, sf::Vector2f position) : b_Tex(&Tex), b_spr(Tex), b_direction(direction), b_position(position)
@@ -35,5 +36,8 @@ public:
         return (dx * dx + dy * dy) > (150.f * 150.f);
     }
 
+    void kill() { b_alive = false; }
+    bool check_is_alive() { return b_alive; }
     void draw(sf::RenderWindow &w) const { w.draw(b_spr); }
+    sf::Vector2f getPosition() const { return b_spr.getPosition(); }
 };

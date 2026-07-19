@@ -5,9 +5,6 @@
 class Character
 {
 
-protected:
-    float m_speed = 200.f;
-
 public:
     enum class State
     {
@@ -15,23 +12,35 @@ public:
         Run
     };
 
+    enum class Team
+    {
+        player,
+        Enemy
+    };
+
+protected:
+    float m_speed = 200.f;
+    sf::Vector2f m_position = {400.f, 300.f};
+    Team m_team = Team::player;
+
 private:
-    const sf::Texture &m_idleTex;
-    const sf::Texture &m_runTex;
+    const sf::Texture *m_idleTex;
+    const sf::Texture *m_runTex;
     sf::Sprite m_spr;
 
     int m_frame = 0;
     float m_frameTimer = 0.f;
     sf::Vector2f m_face_direc = {1.f, 0.f};
-    State m_state = State::Idle;
     int max_frames = 11;
 
+    State m_state = State::Idle;
+
 public:
-    Character(const sf::Texture &IdleTex, const sf::Texture &RunTex, float speed)
-        : m_idleTex(IdleTex), m_runTex(RunTex), m_spr(IdleTex), m_speed(speed)
+    Character(const sf::Texture &IdleTex, const sf::Texture &RunTex, float Speed, sf::Vector2f Position, Team team)
+        : m_idleTex(&IdleTex), m_runTex(&RunTex), m_spr(IdleTex), m_speed(Speed), m_position(Position), m_team(team)
     {
         m_spr.setTextureRect(sf::IntRect({0, 0}, {32, 32}));
-        m_spr.setPosition({400, 300});
+        m_spr.setPosition(m_position);
         auto b = m_spr.getLocalBounds();
         m_spr.setOrigin({b.size.x / 2.f, b.size.y / 2.f});
     }
@@ -43,7 +52,7 @@ public:
         if (direction.x != 0.f || direction.y != 0.f)
         {
             m_state = State::Run;
-            m_spr.setTexture(m_runTex);
+            m_spr.setTexture(*m_runTex);
             max_frames = 12;
 
             float len = sqrt(pow(direction.x, 2) + pow(direction.y, 2));
@@ -57,7 +66,7 @@ public:
         else
         {
             m_state = State::Idle;
-            m_spr.setTexture(m_idleTex);
+            m_spr.setTexture(*m_idleTex);
             max_frames = 11;
             m_face_direc = {1.f, 0.f};
         }
