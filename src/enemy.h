@@ -13,8 +13,8 @@ private:
 public:
 
 
-    Enemy(const sf::Texture &IdleTex, const sf::Texture &RunTex, const Player *target)
-        : Character(IdleTex, RunTex, 150.f, {100.f, 200.f}, Team::Enemy), m_target(target) {}
+    Enemy(const sf::Texture &IdleTex, const sf::Texture &RunTex, const Player *target, sf::Vector2f position)
+        : Character(IdleTex, RunTex, 150.f, position, Team::Enemy), m_target(target) {}
 
     bool check_if_dead(){
         return (m_Hp <= 0.f);
