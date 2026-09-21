@@ -25,6 +25,10 @@ public:
 
     void update(float dt)
     {
+        float len = sqrt(pow(b_direction.x, 2) + pow(b_direction.y, 2));
+        b_direction.x = b_direction.x / len;
+        b_direction.y = b_direction.y / len;
+
         b_spr.move(b_direction * dt * b_speed);
     }
 
@@ -33,11 +37,11 @@ public:
         auto pos = b_spr.getPosition();
         float dx = pos.x - b_position.x;
         float dy = pos.y - b_position.y;
-        return (dx * dx + dy * dy) > (150.f * 150.f);
+        return (dx * dx + dy * dy) > (200.f * 200.f);
     }
 
     void kill() { b_alive = false; }
-    bool check_is_alive() { return b_alive; }
+    bool check_is_alive() const { return b_alive; }
     void draw(sf::RenderWindow &w) const { w.draw(b_spr); }
     sf::Vector2f getPosition() const { return b_spr.getPosition(); }
 };

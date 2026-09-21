@@ -16,7 +16,7 @@ public:
     Enemy(const sf::Texture &IdleTex, const sf::Texture &RunTex, const Player *target, sf::Vector2f position)
         : Character(IdleTex, RunTex, 150.f, position, Team::Enemy), m_target(target) {}
 
-    bool check_if_dead(){
+    bool check_if_dead() const {
         return (m_Hp <= 0.f);
     }
 
@@ -25,7 +25,7 @@ public:
     }
 
 private:
-    sf::Vector2f Get_direction() override
+    sf::Vector2f getDirection() override
     {
         sf::Vector2f aim_postion = m_target->getPosition(), m_position = this->getPosition();
         sf::Vector2f direction = {aim_postion.x - m_position.x, aim_postion.y - m_position.y};

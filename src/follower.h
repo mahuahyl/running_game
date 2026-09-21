@@ -14,7 +14,7 @@ public:
     : Character(IdleTex, RunTex, 100.f, {300.f, 400.f}, Team::player), m_target(target){}
 
 private:
-    sf::Vector2f  Get_direction() override{
+    sf::Vector2f  getDirection() override{
         sf::Vector2f aim_postion = m_target->getPosition(), m_position = this->getPosition();
         sf::Vector2f direction = {aim_postion.x - m_position.x, aim_postion.y - m_position.y};
 

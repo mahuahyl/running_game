@@ -4,12 +4,15 @@
 
 class Player : public Character
 {
+private:
+    float m_Hp = 100.f;
+
 public:
     Player(const sf::Texture &IdleTex, const sf::Texture &RunTex)
         : Character(IdleTex, RunTex, 200.f, {300.f, 400.f}, Team::player) {}
 
 private:
-    sf::Vector2f Get_direction() override
+    sf::Vector2f getDirection() override
     {
         float x = 0.f, y = 0.f;
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D))

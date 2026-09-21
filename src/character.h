@@ -47,7 +47,7 @@ public:
 
     void update(float dt)
     {
-        auto direction = Get_direction();
+        auto direction = getDirection();
 
         if (direction.x != 0.f || direction.y != 0.f)
         {
@@ -86,7 +86,7 @@ public:
 
     sf::Vector2f getPosition() const { return m_spr.getPosition(); }
 
-    virtual sf::Vector2f Get_direction() = 0;
+    virtual sf::Vector2f getDirection() = 0;
 
     virtual ~Character() = default;
 };
