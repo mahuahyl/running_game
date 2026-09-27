@@ -13,7 +13,7 @@ private:
 public:
     Texter(const sf::Texture &texture) : m_spr(texture) {}
 
-    void divide(std::string s)
+    void divide(const std::string &s)
     {
         texts.clear();
         for (auto it : s)

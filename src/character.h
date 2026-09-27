@@ -68,6 +68,8 @@ public:
             m_state = State::Idle;
             m_spr.setTexture(*m_idleTex);
             max_frames = 11;
+            m_frame = 0;
+            m_spr.setTextureRect(sf::IntRect({0, 0}, {32, 32}));
             m_face_direc = {1.f, 0.f};
         }
 
