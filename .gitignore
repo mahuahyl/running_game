@@ -5,5 +5,8 @@ build/
 *.exe
 *.dll
 
+# Release artifacts
+releases/
+
 # IDE
 .vscode/
