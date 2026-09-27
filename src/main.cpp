@@ -10,6 +10,7 @@
 #include "bullet.h"
 #include "enemy.h"
 #include "scorer.h"
+#include "texter.h"
 
 float cal_distant(sf::Vector2f p1, sf::Vector2f p2)
 {
@@ -79,7 +80,7 @@ int main()
         MessageBoxA(NULL, "Failed to load: Enemy Idle texture", "Error", MB_OK | MB_ICONERROR);
         return -1;
     }
-    if (!text_texture.loadFromFile("assets/Menu/text/Text (White) (8x10).png"))
+    if (!text_texture.loadFromFile("assets/Menu/Text/Text (White) (8x10).png"))
     {
         MessageBoxA(NULL, "Failed to load: text texture", "Error", MB_OK | MB_ICONERROR);
         return -1;
@@ -89,6 +90,7 @@ int main()
     Player p1(p_idle_texture, p_run_texture);
     Follower n1(npc_idle_texture, npc_run_texture, &p1);
     Scorer scorer(text_texture);
+    Texter texter(text_texture);
     std::vector<Bullet> bullets;
     std::vector<Enemy> enemies;
 
@@ -127,7 +129,6 @@ int main()
                 window.close();
 
             if (state == game_state::playing)
-
             {
                 if (const auto *mouse = event->getIf<sf::Event::MouseButtonPressed>())
                 {
@@ -146,6 +147,18 @@ int main()
                     {
                         Enemy e1(enemy_idle_texture, enemy_run_texture, &p1, {100.f, 200.f});
                         enemies.push_back(e1);
+                    }
+                }
+            }
+
+            if (state == game_state::over){
+                if(const auto *key = event->getIf<sf::Event::KeyPressed>()){
+                    if(key->code == sf::Keyboard::Key::R){
+                        state = game_state::playing;
+                        enemies.clear();
+                        bullets.clear();
+                        p1.reset();
+                        scorer.reset();
                     }
                 }
             }
@@ -214,13 +227,13 @@ int main()
 
             p1.update(dt);
             // n1.update(dt);
-            
-        }
+                }
 
         window.clear();
 
         if (state == game_state::over)
         {
+            texter.draw({300.f, 150.f}, "press r to replay", window);
         }
 
         // 展示

@@ -35,8 +35,14 @@ public:
     }
 
     void add(int add){
-        this->score += add;
+        score += add;
         divide();
     }
     
+    void reset(){
+        score = 0;
+        num_sprs.clear();
+        divide();
+    }
+
 };

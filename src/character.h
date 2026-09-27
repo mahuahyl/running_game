@@ -20,7 +20,7 @@ public:
 
 protected:
     float m_speed = 200.f;
-    sf::Vector2f m_position = {400.f, 300.f};
+    sf::Vector2f m_position = {400.f, 400.f};
     Team m_team = Team::player;
 
 private:
@@ -78,6 +78,12 @@ public:
             m_frame = (m_frame + 1) % max_frames;
             m_spr.setTextureRect(sf::IntRect({m_frame * 32, 0}, {32, 32}));
         }
+    }
+
+    void reset(){
+        m_spr.setTextureRect(sf::IntRect({0, 0}, {32, 32}));
+        m_spr.setPosition(m_position);
+        m_state = State::Idle;
     }
 
     sf::Vector2f getFacingDir() const { return m_face_direc; }
