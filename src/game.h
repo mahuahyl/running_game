@@ -111,7 +111,7 @@ private:
 
                 } while (std::hypot(dis.x, dis.y) < 50.f);
 
-                NormalE e1(textures.enemy_idle_texture, textures.enemy_run_texture, &p1, position);
+                NormalE e1(textures.Nenemy_idle_texture, textures.Nenemy_run_texture, &p1, position);
                 enemies.push_back(e1);
                 NspawnTimer -= NspawnInterval;
             }
@@ -126,7 +126,7 @@ private:
 
                 } while (std::hypot(dis.x, dis.y) < 100.f);
 
-                FastE e1(textures.enemy_idle_texture, textures.enemy_run_texture, &p1, position);
+                FastE e1(textures.Fenemy_idle_texture, textures.Fenemy_run_texture, &p1, position);
                 enemies.push_back(e1);
                 FspawnTimer -= FspawnInterval;
             }
@@ -223,7 +223,7 @@ private:
                 {
                     if (key->code == sf::Keyboard::Key::P)
                     {
-                        NormalE e1(textures.enemy_idle_texture, textures.enemy_run_texture, &p1, {100.f, 200.f});
+                        NormalE e1(textures.Nenemy_idle_texture, textures.Nenemy_run_texture, &p1, {100.f, 200.f});
                         enemies.push_back(e1);
                     }
                 }
