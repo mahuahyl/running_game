@@ -9,7 +9,7 @@ private:
 
 public:
     Player(const sf::Texture &IdleTex, const sf::Texture &RunTex)
-        : Character(IdleTex, RunTex, 200.f, {400.f, 300.f}, Team::player) {}
+        : Character(IdleTex, RunTex, {400.f, 300.f}, Team::player, 200.f, 100.f) {}
 
 private:
     sf::Vector2f getDirection() override

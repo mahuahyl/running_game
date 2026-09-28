@@ -9,7 +9,7 @@ private:
     {
         if (tex.loadFromFile(path))
             return;
-        MessageBoxA(NULL,
+        MessageBoxA(nullptr,
                     ("Failed to load: " + path).c_str(),
                     "Error",
                     MB_OK | MB_ICONERROR);

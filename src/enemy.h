@@ -8,20 +8,19 @@ class Enemy : public Character
 {
 private:
     const Player *m_target;
-    float m_Hp = 100.f;
 
 public:
 
 
-    Enemy(const sf::Texture &IdleTex, const sf::Texture &RunTex, const Player *target, sf::Vector2f position)
-        : Character(IdleTex, RunTex, 150.f, position, Team::Enemy), m_target(target) {}
+    Enemy(const sf::Texture &IdleTex, const sf::Texture &RunTex, const Player *target, sf::Vector2f position, float speed, float Hp)
+        : Character(IdleTex, RunTex, position, Team::Enemy, speed, Hp), m_target(target) {}
 
     bool check_if_dead() const {
         return (m_Hp <= 0.f);
     }
 
     void Heated(){
-        this->m_Hp -= 5.f;
+        this->m_Hp -= 10.f;
     }
 
 private:

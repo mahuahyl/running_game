@@ -15,6 +15,8 @@
 #include "scorer.h"
 #include "texter.h"
 #include "texture.h"
+#include "normal_enemy.h"
+#include "fast_enemy.h"
 
 class Game
 {
@@ -43,8 +45,8 @@ private:
     std::vector<Enemy> enemies;
 
     // 敌人生成数据
-    float spawnTimer = 0.f;
-    float spawnInterval = 5.f;
+    float NspawnTimer = 0.f, FspawnTimer = 0.f;
+    float NspawnInterval = 5.f, FspawnInterval = 2.f;
 
     std::random_device rd;
     std::mt19937 gen;
@@ -96,8 +98,9 @@ private:
         // 敌人生成
         if (state == game_state::playing)
         {
-            spawnTimer += dt;
-            if (spawnTimer > spawnInterval)
+            NspawnTimer += dt;
+            FspawnTimer += dt;
+            if (NspawnTimer > NspawnInterval)
             {
                 sf::Vector2f position;
                 sf::Vector2f dis;
@@ -108,9 +111,24 @@ private:
 
                 } while (std::hypot(dis.x, dis.y) < 50.f);
 
-                Enemy e1(textures.enemy_idle_texture, textures.enemy_run_texture, &p1, position);
+                NormalE e1(textures.enemy_idle_texture, textures.enemy_run_texture, &p1, position);
                 enemies.push_back(e1);
-                spawnTimer -= spawnInterval;
+                NspawnTimer -= NspawnInterval;
+            }
+            if (FspawnTimer > FspawnInterval)
+            {
+                sf::Vector2f position;
+                sf::Vector2f dis;
+                do
+                {
+                    position = {xdist(gen), ydist(gen)};
+                    dis = position - p1.getPosition();
+
+                } while (std::hypot(dis.x, dis.y) < 100.f);
+
+                FastE e1(textures.enemy_idle_texture, textures.enemy_run_texture, &p1, position);
+                enemies.push_back(e1);
+                FspawnTimer -= FspawnInterval;
             }
         }
 
@@ -205,7 +223,7 @@ private:
                 {
                     if (key->code == sf::Keyboard::Key::P)
                     {
-                        Enemy e1(textures.enemy_idle_texture, textures.enemy_run_texture, &p1, {100.f, 200.f});
+                        NormalE e1(textures.enemy_idle_texture, textures.enemy_run_texture, &p1, {100.f, 200.f});
                         enemies.push_back(e1);
                     }
                 }

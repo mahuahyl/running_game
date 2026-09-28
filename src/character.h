@@ -20,6 +20,7 @@ public:
 
 protected:
     float m_speed = 200.f;
+    float m_Hp = 100.f;
     sf::Vector2f m_position = {400.f, 400.f};
     Team m_team = Team::player;
 
@@ -36,8 +37,8 @@ private:
     State m_state = State::Idle;
 
 public:
-    Character(const sf::Texture &IdleTex, const sf::Texture &RunTex, float Speed, sf::Vector2f Position, Team team)
-        : m_idleTex(&IdleTex), m_runTex(&RunTex), m_spr(IdleTex), m_speed(Speed), m_position(Position), m_team(team)
+    Character(const sf::Texture &IdleTex, const sf::Texture &RunTex, sf::Vector2f Position, Team team, float Speed, float Hp)
+        : m_idleTex(&IdleTex), m_runTex(&RunTex), m_spr(IdleTex), m_position(Position), m_team(team), m_speed(Speed), m_Hp(Hp)
     {
         m_spr.setTextureRect(sf::IntRect({0, 0}, {32, 32}));
         m_spr.setPosition(m_position);
