@@ -46,11 +46,14 @@ public:
         }
     }
 
-    void draw(const sf::Vector2f &position, const std::string &s, sf::RenderWindow &w){
+    void draw(const sf::Vector2f &position, const std::string &s, sf::RenderTarget &w,
+              sf::Color color = sf::Color::White, float scale = 1.f){
         divide(s);
         int num = 0;
         for(auto it : texts){
-            it.setPosition({position.x + num * 12, position.y});
+            it.setPosition({position.x + num * 12 * scale, position.y});
+            it.setColor(color);
+            it.setScale({scale, scale});
             w.draw(it);
             num++;
         }

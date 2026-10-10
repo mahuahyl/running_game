@@ -28,6 +28,8 @@ private:
 public:
     Scorer(const sf::Texture &numbers) : m_spr(numbers) {divide();}
 
+    int getScore() const { return score; }
+
     void draw(sf::RenderWindow &w){
         for(auto it : num_sprs){
             w.draw(it);

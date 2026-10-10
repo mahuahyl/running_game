@@ -18,9 +18,11 @@
 #include "enemy.h"
 #include "scorer.h"
 #include "texter.h"
+#include "cooldown_ui.h"
 #include "texture.h"
 #include "normal_enemy.h"
 #include "fast_enemy.h"
+#include "heavy_enemy.h"
 
 class Game
 {
@@ -39,12 +41,14 @@ private:
 
     // 载入纹理
     Textures textures;
+    sf::RectangleShape background;
 
     // 对象创建
     Player p1;
     Follower n1;
     Scorer scorer;
     Texter texter;
+    CooldownUI boomCooldownUI;
     std::vector<std::unique_ptr<Bullet>> bullets;
     std::vector<std::unique_ptr<Enemy>> enemies;
     std::vector<Explosion> explosions;
@@ -52,6 +56,13 @@ private:
     // 敌人生成数据
     float NspawnTimer = 0.f, FspawnTimer = 0.f;
     float NspawnInterval = 5.f, FspawnInterval = 2.f;
+    float HspawnTimer = 0.f;
+    static constexpr float HspawnInterval = 4.f;
+    static constexpr int HeavyEnemyUnlockScore = 1000;
+    float BoomBCooldown = 3.f, BoomBTimer = 0.f;
+    static constexpr int BoomBUnlockScore = 1000;
+
+    bool isBoomUnlocked() const { return scorer.getScore() >= BoomBUnlockScore; }
 
     std::random_device rd;
     std::mt19937 gen;
@@ -73,11 +84,21 @@ private:
         explosions.clear();
         p1.reset();
         scorer.reset();
+        NspawnTimer = 0.f;
+        FspawnTimer = 0.f;
+        HspawnTimer = 0.f;
+        BoomBTimer = 0.f;
     }
 
     void render()
     {
         window.clear();
+
+        // 始终铺满当前视图，先绘制地面再绘制游戏对象。
+        const auto& view = window.getView();
+        background.setPosition(view.getCenter() - view.getSize() / 2.f);
+        background.setSize(view.getSize());
+        window.draw(background);
 
         // 展示
         for (auto &it : bullets)
@@ -88,12 +109,14 @@ private:
         {
             it->draw(window);
         }
-        for (const auto& explosion : explosions)
+        for (const auto &explosion : explosions)
         {
             explosion.draw(window);
         }
         scorer.draw(window);
         p1.draw(window);
+        if (state == game_state::playing)
+            boomCooldownUI.draw(window, BoomBTimer, BoomBCooldown, scorer.getScore(), BoomBUnlockScore);
         // n1.draw(window);
         if (state == game_state::over)
         {
@@ -106,16 +129,21 @@ private:
     void update(float dt)
     {
         // 游戏结束后已触发的动画也继续播完；重开时清空。
-        for (auto& explosion : explosions)
+        for (auto &explosion : explosions)
             explosion.update(dt);
         explosions.erase(std::remove_if(explosions.begin(), explosions.end(),
-            [](const Explosion& explosion) { return explosion.isFinished(); }), explosions.end());
+                                        [](const Explosion &explosion)
+                                        { return explosion.isFinished(); }),
+                         explosions.end());
 
         // 敌人生成
         if (state == game_state::playing)
         {
+            if (isBoomUnlocked())
+                BoomBTimer = std::min(BoomBTimer + dt, BoomBCooldown);
             NspawnTimer += dt;
             FspawnTimer += dt;
+
             if (NspawnTimer > NspawnInterval)
             {
                 sf::Vector2f position;
@@ -125,7 +153,7 @@ private:
                     position = {xdist(gen), ydist(gen)};
                     dis = position - p1.getPosition();
 
-                } while (std::hypot(dis.x, dis.y) < 50.f);
+                } while (std::hypot(dis.x, dis.y) < 180.f);
 
                 enemies.push_back(std::make_unique<NormalE>(textures.Nenemy_idle_texture, textures.Nenemy_run_texture, &p1, position));
                 NspawnTimer -= NspawnInterval;
@@ -139,10 +167,27 @@ private:
                     position = {xdist(gen), ydist(gen)};
                     dis = position - p1.getPosition();
 
-                } while (std::hypot(dis.x, dis.y) < 100.f);
+                } while (std::hypot(dis.x, dis.y) < 250.f);
 
                 enemies.push_back(std::make_unique<FastE>(textures.Fenemy_idle_texture, textures.Fenemy_run_texture, &p1, position));
                 FspawnTimer -= FspawnInterval;
+            }
+            // 解锁后才累计时间，避免达到分数时立即生成积攒的敌人。
+            if (scorer.getScore() >= HeavyEnemyUnlockScore)
+            {
+                HspawnTimer += dt;
+                if (HspawnTimer >= HspawnInterval)
+                {
+                    sf::Vector2f position;
+                    do
+                    {
+                        position = {xdist(gen), ydist(gen)};
+                    } while (cal_distant(position, p1.getPosition()) < 180.f * 180.f);
+
+                    enemies.push_back(std::make_unique<HeavyE>(
+                        textures.Henemy_idle_texture, textures.Henemy_run_texture, &p1, position));
+                    HspawnTimer -= HspawnInterval;
+                }
             }
         }
 
@@ -158,13 +203,17 @@ private:
                 it->update(dt);
             }
 
+            const auto& view = window.getView();
+            const sf::FloatRect visibleBounds(view.getCenter() - view.getSize() / 2.f, view.getSize());
             for (auto &b_it : bullets)
             {
-                if (!b_it->check_is_alive()) continue;
+                if (!b_it->check_is_alive())
+                    continue;
                 sf::Vector2f b_position = b_it->getPosition();
                 for (auto &e_it : enemies)
                 {
-                    if (e_it->check_if_dead()) continue;
+                    if (e_it->check_if_dead())
+                        continue;
                     sf::Vector2f e_position = e_it->getPosition();
                     if (cal_distant(b_position, e_position) <= 10 * 10)
                     {
@@ -172,8 +221,8 @@ private:
                         break;
                     }
                 }
-                if (b_it->check_is_alive() && b_it->check_distance())
-                    b_it->onRangeEnd(enemies);
+                if (b_it->check_is_alive() && b_it->shouldEndFlight(visibleBounds))
+                    b_it->onFlightEnd(enemies);
                 // 这一轮开始时子弹存活，结束时死亡：只生成一次动画。
                 if (!b_it->check_is_alive() && b_it->getExplosionRadius() > 0.f)
                     explosions.emplace_back(b_position, b_it->getExplosionRadius());
@@ -181,7 +230,8 @@ private:
 
             for (auto &e_it : enemies)
             {
-                if (e_it->check_if_dead()) continue;
+                if (e_it->check_if_dead())
+                    continue;
                 sf::Vector2f e_position = e_it->getPosition();
                 sf::Vector2f p_position = p1.getPosition();
                 if (cal_distant(e_position, p_position) <= 20 * 20)
@@ -194,7 +244,11 @@ private:
             {
                 if ((*it)->check_if_dead())
                 {
+                    const bool wasUnlocked = isBoomUnlocked();
                     scorer.add(200);
+                    // 跨过解锁分数时立即提供首发，之后照常冷却。
+                    if (!wasUnlocked && isBoomUnlocked())
+                        BoomBTimer = BoomBCooldown;
                     it = enemies.erase(it);
                 }
                 else
@@ -240,8 +294,12 @@ private:
 
                         if (mouse->button == sf::Mouse::Button::Left)
                             bullets.push_back(std::make_unique<NormalB>(textures.bullet_texture, b_dire, p1.getPosition()));
-                        else
+                        else if (mouse->button == sf::Mouse::Button::Right &&
+                                 isBoomUnlocked() && BoomBTimer >= BoomBCooldown)
+                        {
+                            BoomBTimer = 0.f;
                             bullets.push_back(std::make_unique<BoomB>(textures.boom_bullet_texture, b_dire, p1.getPosition()));
+                        }
                     }
                 }
 
@@ -274,10 +332,12 @@ public:
              n1(textures.npc_idle_texture, textures.npc_run_texture, &p1),
              scorer(textures.text_texture),
              texter(textures.text_texture),
+             boomCooldownUI(textures.boom_bullet_texture, textures.text_texture),
              gen(rd()),
              ydist(0.f, 600.f),
              xdist(0.f, 800.f)
     {
+        background.setTexture(&textures.background_texture);
         window.setFramerateLimit(240);
     }
     void run()
@@ -288,7 +348,8 @@ public:
         {
             // 记录时间
             float dt = clock.restart().asSeconds();
-            if (dt > 0.1f) dt = 0.1f;
+            if (dt > 0.1f)
+                dt = 0.1f;
             update(dt);
             processEvents();
             render();

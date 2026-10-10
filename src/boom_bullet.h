@@ -4,6 +4,9 @@
 class BoomB : public Bullet{
 private:
     float bound = 50.f;
+    static constexpr float maxDistance = 200.f;
+
+    float getFlightLimit() const override { return maxDistance; }
 
     void explode(const std::vector<std::unique_ptr<Enemy>>& enemies)
     {
@@ -22,16 +25,21 @@ private:
 
 public:
     BoomB(const sf::Texture &Tex, sf::Vector2f direction, sf::Vector2f position)
-        : Bullet(Tex, direction, position, 150.f, 100.f){}
+        : Bullet(Tex, direction, position, 150.f, 300.f){}
 
     float getExplosionRadius() const override { return bound; }
+
+    bool shouldEndFlight(const sf::FloatRect&) const override
+    {
+        return getDistanceTraveled() >= maxDistance;
+    }
 
     void onImpact(Enemy&, const std::vector<std::unique_ptr<Enemy>>& enemies) override
     {
         explode(enemies);
     }
 
-    void onRangeEnd(const std::vector<std::unique_ptr<Enemy>>& enemies) override
+    void onFlightEnd(const std::vector<std::unique_ptr<Enemy>>& enemies) override
     {
         explode(enemies);
     }

@@ -3,6 +3,8 @@
 #include <cmath>
 #include <memory>
 #include <vector>
+#include <algorithm>
+#include <limits>
 #include "enemy.h"
 
 class Bullet
@@ -11,6 +13,11 @@ protected:
     float damage = 10.f;
     float b_speed = 300.f;
 
+    // 默认不限射程。子类可以限制单次移动，保证终点不会被跨过。
+    virtual float getFlightLimit() const { return std::numeric_limits<float>::infinity(); }
+    float getDistanceTraveled() const { return b_distance; }
+    sf::FloatRect getBounds() const { return b_spr.getGlobalBounds(); }
+
 
 private:
     sf::Vector2f b_direction, b_position;
@@ -18,7 +25,6 @@ private:
     sf::Sprite b_spr;
     bool b_alive = true;
     float b_distance = 0.f;
-    static constexpr float max_distance = 200.f;
 
 public:
     Bullet(const sf::Texture &Tex, sf::Vector2f direction, sf::Vector2f position, float speed, float damageValue)
@@ -47,7 +53,7 @@ public:
         kill();
     }
 
-    virtual void onRangeEnd(const std::vector<std::unique_ptr<Enemy>>&)
+    virtual void onFlightEnd(const std::vector<std::unique_ptr<Enemy>>&)
     {
         kill();
     }
@@ -55,17 +61,16 @@ public:
     void update(float dt)
     {
         if (!check_is_alive()) return;
-        const float remaining = max_distance - b_distance;
+        const float limit = getFlightLimit();
+        const float remaining = std::max(0.f, limit - b_distance);
         const float step = dt * b_speed;
         const float distance = step < remaining ? step : remaining;
         b_spr.move(b_direction * distance);
-        b_distance = step >= remaining ? max_distance : b_distance + distance;
+        b_distance = step >= remaining ? limit : b_distance + distance;
     }
 
-    bool check_distance() const
-    {
-        return b_distance >= max_distance;
-    }
+    // Game 提供可见区域，各子类决定自己的飞行结束条件。
+    virtual bool shouldEndFlight(const sf::FloatRect& visibleBounds) const = 0;
 
     float getDamage() const {return damage;}
     void kill() { b_alive = false; }
