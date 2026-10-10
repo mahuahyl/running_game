@@ -89,6 +89,10 @@ public:
         m_state = State::Idle;
     }
 
+    void hitted(float damage){
+        m_Hp -= damage;
+    }
+
     sf::Vector2f getFacingDir() const { return m_face_direc; }
 
     void draw(sf::RenderWindow &w) const { w.draw(m_spr); }

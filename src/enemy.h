@@ -19,10 +19,6 @@ public:
         return (m_Hp <= 0.f);
     }
 
-    void Heated(){
-        this->m_Hp -= 10.f;
-    }
-
 private:
     sf::Vector2f getDirection() override
     {

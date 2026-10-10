@@ -4,8 +4,6 @@
 
 class Player : public Character
 {
-private:
-    float m_Hp = 100.f;
 
 public:
     Player(const sf::Texture &IdleTex, const sf::Texture &RunTex)

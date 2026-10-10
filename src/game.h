@@ -7,10 +7,14 @@
 #include <random>
 #include <string>
 #include <cstdlib>
+#include <memory>
 #include "character.h"
 #include "player.h"
 #include "follower.h"
 #include "bullet.h"
+#include "normal_bullet.h"
+#include "boom_bullet.h"
+#include "explosion.h"
 #include "enemy.h"
 #include "scorer.h"
 #include "texter.h"
@@ -31,7 +35,7 @@ private:
         playing,
         over
     };
-    game_state state = game_state::playing;
+    game_state state = game_state::over;
 
     // 载入纹理
     Textures textures;
@@ -41,8 +45,9 @@ private:
     Follower n1;
     Scorer scorer;
     Texter texter;
-    std::vector<Bullet> bullets;
-    std::vector<Enemy> enemies;
+    std::vector<std::unique_ptr<Bullet>> bullets;
+    std::vector<std::unique_ptr<Enemy>> enemies;
+    std::vector<Explosion> explosions;
 
     // 敌人生成数据
     float NspawnTimer = 0.f, FspawnTimer = 0.f;
@@ -65,6 +70,7 @@ private:
         state = game_state::playing;
         enemies.clear();
         bullets.clear();
+        explosions.clear();
         p1.reset();
         scorer.reset();
     }
@@ -76,18 +82,22 @@ private:
         // 展示
         for (auto &it : bullets)
         {
-            it.draw(window);
+            it->draw(window);
         }
         for (auto &it : enemies)
         {
-            it.draw(window);
+            it->draw(window);
+        }
+        for (const auto& explosion : explosions)
+        {
+            explosion.draw(window);
         }
         scorer.draw(window);
         p1.draw(window);
         // n1.draw(window);
         if (state == game_state::over)
         {
-            texter.draw({300.f, 150.f}, "press r to replay", window);
+            texter.draw({300.f, 150.f}, "press r to play", window);
         }
 
         window.display();
@@ -95,6 +105,12 @@ private:
 
     void update(float dt)
     {
+        // 游戏结束后已触发的动画也继续播完；重开时清空。
+        for (auto& explosion : explosions)
+            explosion.update(dt);
+        explosions.erase(std::remove_if(explosions.begin(), explosions.end(),
+            [](const Explosion& explosion) { return explosion.isFinished(); }), explosions.end());
+
         // 敌人生成
         if (state == game_state::playing)
         {
@@ -111,8 +127,7 @@ private:
 
                 } while (std::hypot(dis.x, dis.y) < 50.f);
 
-                NormalE e1(textures.Nenemy_idle_texture, textures.Nenemy_run_texture, &p1, position);
-                enemies.push_back(e1);
+                enemies.push_back(std::make_unique<NormalE>(textures.Nenemy_idle_texture, textures.Nenemy_run_texture, &p1, position));
                 NspawnTimer -= NspawnInterval;
             }
             if (FspawnTimer > FspawnInterval)
@@ -126,8 +141,7 @@ private:
 
                 } while (std::hypot(dis.x, dis.y) < 100.f);
 
-                FastE e1(textures.Fenemy_idle_texture, textures.Fenemy_run_texture, &p1, position);
-                enemies.push_back(e1);
+                enemies.push_back(std::make_unique<FastE>(textures.Fenemy_idle_texture, textures.Fenemy_run_texture, &p1, position));
                 FspawnTimer -= FspawnInterval;
             }
         }
@@ -137,30 +151,38 @@ private:
         {
             for (auto &it : bullets)
             {
-                it.update(dt);
+                it->update(dt);
             }
             for (auto &it : enemies)
             {
-                it.update(dt);
+                it->update(dt);
             }
 
             for (auto &b_it : bullets)
             {
-                sf::Vector2f b_position = b_it.getPosition();
+                if (!b_it->check_is_alive()) continue;
+                sf::Vector2f b_position = b_it->getPosition();
                 for (auto &e_it : enemies)
                 {
-                    sf::Vector2f e_position = e_it.getPosition();
+                    if (e_it->check_if_dead()) continue;
+                    sf::Vector2f e_position = e_it->getPosition();
                     if (cal_distant(b_position, e_position) <= 10 * 10)
                     {
-                        e_it.Heated();
-                        b_it.kill();
+                        b_it->onImpact(*e_it, enemies);
+                        break;
                     }
                 }
+                if (b_it->check_is_alive() && b_it->check_distance())
+                    b_it->onRangeEnd(enemies);
+                // 这一轮开始时子弹存活，结束时死亡：只生成一次动画。
+                if (!b_it->check_is_alive() && b_it->getExplosionRadius() > 0.f)
+                    explosions.emplace_back(b_position, b_it->getExplosionRadius());
             }
 
             for (auto &e_it : enemies)
             {
-                sf::Vector2f e_position = e_it.getPosition();
+                if (e_it->check_if_dead()) continue;
+                sf::Vector2f e_position = e_it->getPosition();
                 sf::Vector2f p_position = p1.getPosition();
                 if (cal_distant(e_position, p_position) <= 20 * 20)
                 {
@@ -170,7 +192,7 @@ private:
 
             for (auto it = enemies.begin(); it != enemies.end();)
             {
-                if (it->check_if_dead())
+                if ((*it)->check_if_dead())
                 {
                     scorer.add(200);
                     it = enemies.erase(it);
@@ -183,7 +205,7 @@ private:
 
             for (auto it = bullets.begin(); it != bullets.end();)
             {
-                if (it->check_distance() || !it->check_is_alive())
+                if (!(*it)->check_is_alive())
                 {
                     it = bullets.erase(it);
                 }
@@ -210,12 +232,16 @@ private:
             {
                 if (const auto *mouse = event->getIf<sf::Event::MouseButtonPressed>())
                 {
-                    if (mouse->button == sf::Mouse::Button::Left)
+                    if (mouse->button == sf::Mouse::Button::Left ||
+                        mouse->button == sf::Mouse::Button::Right)
                     {
                         sf::Vector2f mouse_pos = static_cast<sf::Vector2f>(sf::Mouse::getPosition(window));
                         sf::Vector2f b_dire = mouse_pos - p1.getPosition();
 
-                        bullets.emplace_back(textures.bullet_texture, b_dire, p1.getPosition());
+                        if (mouse->button == sf::Mouse::Button::Left)
+                            bullets.push_back(std::make_unique<NormalB>(textures.bullet_texture, b_dire, p1.getPosition()));
+                        else
+                            bullets.push_back(std::make_unique<BoomB>(textures.boom_bullet_texture, b_dire, p1.getPosition()));
                     }
                 }
 
@@ -223,8 +249,8 @@ private:
                 {
                     if (key->code == sf::Keyboard::Key::P)
                     {
-                        NormalE e1(textures.Nenemy_idle_texture, textures.Nenemy_run_texture, &p1, {100.f, 200.f});
-                        enemies.push_back(e1);
+                        sf::Vector2f position = {100.f, 200.f};
+                        enemies.push_back(std::make_unique<NormalE>(textures.Nenemy_idle_texture, textures.Nenemy_run_texture, &p1, position));
                     }
                 }
             }
